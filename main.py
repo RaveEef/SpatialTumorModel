@@ -5,6 +5,9 @@ import glob
 import re
 import os
 
+
+# PARAMETERS
+#
 # for file in os.listdir('figures\\'):
 #   os.remove('figures\\'+ file)
 
@@ -65,13 +68,19 @@ def make_gif(initial_density):
     imageio.mimsave('process_{}_{}_{}.gif'.format(initial_density[0], initial_density[1], initial_density[2]),
                     gif, fps=(len(files)/10))
 
+    if os.path.isfile("process.gif"):
+        os.remove("process.gif")
+
 
 def run(initial_density):
+
     model = ProcessModel(initial_density, 50, 50)
 
-    stability_counter = [0, 0]
+    density_stable_counter = [0, 0, 0]
+    growth_rate_stable_counter = [0, 0, 0]
+    before_growth_rates = [0, 0, 0]
 
-    for i in range(42):
+    for i in range(100):
 
         print("i: ", i)
 
@@ -90,25 +99,71 @@ def run(initial_density):
         scatter_plot(i, model, initial_density)
 
         after_densities = model.get_density()
-        diff_densities = [abs(before_densities[0] - after_densities[0]), abs(before_densities[1] - after_densities[1])]
+        diff_densities = [abs(before_densities[0] - after_densities[0]), abs(before_densities[1] - after_densities[1]),
+                          abs(before_densities[2] - after_densities[2])]
+
+        def growth_rate(before, after):
+            if before == 0:
+                return after - before
+            return (after - before)/before
+
+        after_growth_rates = [growth_rate(before_densities[0], after_densities[0]),
+                        growth_rate(before_densities[1], after_densities[1]),
+                              growth_rate(before_densities[2], after_densities[2])]
+        diff_growth_rates = [abs(before_growth_rates[0] - after_growth_rates[0]),
+                                 abs(before_growth_rates[1] - after_growth_rates[1]),
+                             abs(before_growth_rates[2] - after_growth_rates[1])]
 
         if diff_densities[0] <= (0.05 * initial_density[0]):
-            stability_counter[0] += 1
+            density_stable_counter[0] += 1
         else:
-            stability_counter[0] = 0
-        if diff_densities[1] <= (0.05 * initial_density[1]):
-            stability_counter[1] += 1
-        else:
-            stability_counter[1] = 0
+            density_stable_counter[0] = 0
 
-        print("difference densities: {} and stability_counter: {}".format(diff_densities, stability_counter))
-        if stability_counter[0] > 10 and stability_counter[1] > 10:
+        if diff_densities[1] <= (0.05 * initial_density[1]):
+            density_stable_counter[1] += 1
+        else:
+            density_stable_counter[1] = 0
+
+        if diff_densities[2] <= (0.05 * initial_density[2]):
+            density_stable_counter[2] += 1
+        else:
+            density_stable_counter[2] = 0
+
+
+        if diff_growth_rates[0] <= 0.05:
+            growth_rate_stable_counter[0] += 1
+        else:
+            growth_rate_stable_counter[0] = 0
+
+        if diff_growth_rates[1] <= 0.05:
+            growth_rate_stable_counter[1] += 1
+        else:
+            growth_rate_stable_counter[1] = 0
+
+        if diff_growth_rates[2] <= 0.05:
+            growth_rate_stable_counter[2] += 1
+        else:
+            growth_rate_stable_counter[2] = 0
+
+        print("difference densities: {} and stability_counter: {}".format(diff_densities, density_stable_counter))
+        print("difference growth rates: {} and stability counter: {}".format(diff_growth_rates,
+                                                                             growth_rate_stable_counter))
+
+        if density_stable_counter[0] > 10 and density_stable_counter[1] > 10 and density_stable_counter[2] > 10:
+            print("EQ density")
             break
+        if growth_rate_stable_counter[0] > 10 and growth_rate_stable_counter[1] > 10 and growth_rate_stable_counter[2] > 10:
+            print("EQ growth rate")
+            break
+
+        before_growth_rates = after_growth_rates
+
+
 
     make_gif(initial_density)
 
 
-initial_densities = [[20, 20, 20]]
+initial_densities = [[0, 20, 20]]
 
 for id in initial_densities:
     run(id)

@@ -105,10 +105,12 @@ class ProcessModel(Model):
         return density
 
     def new_cell2add(self, cell):
-        self.cells2add.append(cell)
+        if not self.cells2add.__contains__(cell):
+            self.cells2add.append(cell)
 
     def new_cell2delete(self, cell):
-        self.cells2delete.append(cell)
+        if not self.cells2delete.__contains__(cell):
+            self.cells2delete.append(cell)
 
     def add_cell_pos(self, pos, cell_type):
 
