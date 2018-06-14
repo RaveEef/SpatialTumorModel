@@ -1,0 +1,14 @@
+
+*.jpg
+
+*.pyc
+
+*.xml
+
+*.iml
+
+*.xml
+
+*.xml
+
+.idea/vcs.xml
