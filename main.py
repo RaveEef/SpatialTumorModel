@@ -162,6 +162,7 @@ def run(initial_density):
 
     make_gif(initial_density)
 
+
 if __name__ == "__main__":
     initial_densities = [[0, 20, 20]]
 

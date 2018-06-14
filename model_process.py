@@ -2,6 +2,7 @@ from mesa import Model
 from mesa.space import ContinuousSpace
 from mesa.time import RandomActivation
 from model_cells import CellAgent
+from multiprocessing import Pool
 import random
 
 
@@ -137,7 +138,9 @@ class ProcessModel(Model):
         # TODO: Compute model density once and give as parameter to the step function
         self.density = self.get_density()
 
-        self.schedule.step()
+        with Pool(8) as p:
+            self.schedule.step()
+
         self.counter = 0
 
     def add_new_cells(self):
