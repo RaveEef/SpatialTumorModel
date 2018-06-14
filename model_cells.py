@@ -22,6 +22,9 @@ class CellAgent(Agent):
         self.delta = None
         self.d = None
 
+        self.neighbours = []
+        self.cell_density_model = []
+
     def set_gamma(self, gamma):
         self.gamma = gamma
 
@@ -59,8 +62,9 @@ class CellAgent(Agent):
             self.state = 0
             self.model.new_cell2delete(self)
 
-    def get_neighbours(self, radius):
-        return self.model.space.get_neighbors(self.pos, radius, False)
+    def set_neighbours(self):
+
+        self.neighbours = self.model.space.get_neighbors(self.pos, self.model.density_radius[self.type], False)
 
     def is_crowed(self, neighbours):
 
@@ -71,10 +75,10 @@ class CellAgent(Agent):
 
     def give_birth(self):
 
-        neighbours = self.get_neighbours(self.model.density_radius[self.type])
-        density = self.model.get_density(neighbours)
-        num_cancer = density[0] + density[1]
-        num_tkiller = density[2]
+        neighbours = self.set_neighbours()
+        # density = self.model.get_density(self.neighbours)
+        num_cancer = self.cell_density_model[0] + self.cell_density_model[1]
+        num_tkiller = self.cell_density_model[2]
 
         prob_birth = 0
         birth_rate = self.model.birth_rates[self.type]
@@ -134,9 +138,9 @@ class CellAgent(Agent):
     def cell_death(self):
 
         prob_death = 0
-        neighbours = self.get_neighbours(self.model.frequency_radius[self.type])
-        density = self.model.get_density(neighbours)
-        total_cells = [density[0] + density[1], density[2]]
+        # neighbours = self.set_neighbours(self.model.frequency_radius[self.type])
+        # density = self.model.get_density(self.neighbours)
+        total_cells = [self.cell_density_model[0] + self.cell_density_model[1], self.cell_density_model[2]]
 
         if self.type == 0 or self.type == 1:
             if total_cells[0] == 0:
@@ -159,6 +163,10 @@ class CellAgent(Agent):
         if self.model.counter % 50 == 0:
             print(self.model.counter, "//", len(self.model.schedule.agents))
 
+        self.set_neighbours()
+        self.cell_density_model = self.model.density
+        # if self.is_crowed()
+
         give_birth = self.give_birth()
         if give_birth:
             offspring_pos = self.daughter_cell_pos()
@@ -174,9 +182,9 @@ class CellAgent(Agent):
 
             self.model.new_cell2add((offspring, offspring_pos))
 
-        neighbours = self.get_neighbours(self.model.density_radius[self.type])
+        # neighbours = self.set_neighbours(self.model.density_radius[self.type])
         str_neighbours = "["
-        for n in neighbours:
+        for n in self.neighbours:
             if len(str_neighbours) == 1:
                 str_neighbours = str_neighbours + str(n.unique_id)
             else:

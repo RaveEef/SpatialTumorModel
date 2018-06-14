@@ -88,6 +88,7 @@ class ProcessModel(Model):
             self.space.place_agent(a, (x, y))
 
         self.counter = 0
+        self.density = []
 
     @property
     def g(self):
@@ -132,6 +133,9 @@ class ProcessModel(Model):
         self.pos_tkiller_cells = [[], []]
 
     def step(self):
+
+        # TODO: Compute model density once and give as parameter to the step function
+        self.density = self.get_density()
 
         self.schedule.step()
         self.counter = 0
