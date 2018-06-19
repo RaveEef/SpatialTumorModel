@@ -1,5 +1,6 @@
 from model_process import ProcessModel
 from matplotlib import pyplot as plt
+
 import imageio
 import glob
 import re
@@ -7,7 +8,8 @@ import os
 
 
 # PARAMETERS
-#
+# Significance level for difference in growthrates for selfish, cooperative, and tkiller cell respectively
+SIGNIFICANCE_EQ_GROWTH_RATE = [0.05, 0.05, 0.05]
 # for file in os.listdir('figures\\'):
 #   os.remove('figures\\'+ file)
 
@@ -72,7 +74,7 @@ def make_gif(initial_density):
         os.remove("process.gif")
 
 
-def run(initial_density):
+def run(initial_density, n_iteration=100, plot_frequency=1):
 
     model = ProcessModel(initial_density, 50, 50)
 
@@ -80,7 +82,7 @@ def run(initial_density):
     growth_rate_stable_counter = [0, 0, 0]
     before_growth_rates = [0, 0, 0]
 
-    for i in range(100):
+    for i in range(n_iteration):
 
         print("i: ", i)
 
@@ -93,10 +95,16 @@ def run(initial_density):
         model.step()
         for c in model.schedule.agents:
             model.add_cell_pos(c.pos, c.type)
-        model.add_new_cells()
-        model.delete_dead_cells()
 
-        scatter_plot(i, model, initial_density)
+        added_types = model.add_new_cells()
+        print("Added selfish: {}\nAdded coop: {}\nAdded tkiller: {}".format(added_types[0], added_types[1],
+                                                                            added_types[2]))
+
+        dead_types = model.delete_dead_cells()
+        print("Dead selfish: {}\nDead coop: {}\nDead tkiller: {}".format(dead_types[0], dead_types[1], dead_types[2]))
+
+        if plot_frequency > 0 and i % plot_frequency == 0:
+            scatter_plot(i, model, initial_density)
 
         after_densities = model.get_density()
         diff_densities = [abs(before_densities[0] - after_densities[0]), abs(before_densities[1] - after_densities[1]),
@@ -128,7 +136,6 @@ def run(initial_density):
             density_stable_counter[2] += 1
         else:
             density_stable_counter[2] = 0
-
 
         if diff_growth_rates[0] <= 0.05:
             growth_rate_stable_counter[0] += 1
@@ -162,8 +169,25 @@ def run(initial_density):
 
     make_gif(initial_density)
 
+from egtplot import plot_static
 
-initial_densities = [[0, 20, 20]]
 
-for id in initial_densities:
-    run(id)
+initial_densities = [[50, 50, 50]]
+
+def get_payoff(alpha, beta, gamma, rho):
+    return [[0, alpha, 0],
+            [1 + alpha - beta, 1 - 2 * beta, 1 - beta + rho],
+            [1 - gamma, 1 - gamma, 1 - gamma]]
+
+
+# for id in initial_densities:
+#    run(id, n_iteration=100, plot_frequency=0)
+parameter_values = [[1], [1], [1], [1]]
+labels = ['S', 'D', 'I']
+# simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels)
+# payoff_entries = [[0], [-1], [3], [-1], [0], [1], [3], [1], [0]]
+simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels,
+                        paths=True, generations=10, steps=2000, ic_type='random', path_color='viridis')
+plt.show(simplex)
+
+

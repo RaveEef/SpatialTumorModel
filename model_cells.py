@@ -75,8 +75,15 @@ class CellAgent(Agent):
 
     def give_birth(self):
 
-        neighbours = self.set_neighbours()
+        # neighbours = self.set_neighbours()
         # density = self.model.get_density(self.neighbours)
+        n_count = [0, 0]
+        for n in self.neighbours:
+            if n.type == 0 or n.type == 1:
+                n_count[0] += 1
+            elif n.type == 2:
+                n_count[1] += 1
+
         num_cancer = self.cell_density_model[0] + self.cell_density_model[1]
         num_tkiller = self.cell_density_model[2]
 
@@ -93,8 +100,28 @@ class CellAgent(Agent):
         else:
             print("WHUT")
 
-        rnd_prop = random.uniform(0, 1)
-        if prob_birth <= rnd_prop:
+        # print("Probability of giving birth: ", prob_birth)
+        prob_birth2 = 0
+
+        if self.type == 0 or self.type == 1:
+            prob_birth2 = 1 - (sqrt(n_count[0]) / self.model.k)
+            prob_birth2 = birth_rate * prob_birth2
+        elif self.type == 2:
+            prob_birth2 = self.model.l + (self.model.a * (sqrt(n_count[0])))
+            prob_birth2 = 1 - (n_count[1] / prob_birth2)
+            prob_birth2 = birth_rate * prob_birth2
+        else:
+            print("WHUT")
+
+        if self.type == 0 or self.type == 1:
+            self.model.average_birthrate[0][0] += prob_birth2
+            self.model.average_birthrate[0][1] += 1
+        elif self.type == 2:
+            self.model.average_birthrate[1][0] += prob_birth2
+            self.model.average_birthrate[1][1] += 1
+
+        # print("Prob2: ", prob_birth2)
+        if random.uniform(0, 1) <= prob_birth2:
             return True
         return False
 
@@ -142,17 +169,31 @@ class CellAgent(Agent):
         # density = self.model.get_density(self.neighbours)
         total_cells = [self.cell_density_model[0] + self.cell_density_model[1], self.cell_density_model[2]]
 
+        n_count = [0, 0]
+        for n in self.neighbours:
+            if n.type == 0 or n.type == 1:
+                n_count[0] += 1
+            elif n.type == 2:
+                n_count[1] += 1
+
         if self.type == 0 or self.type == 1:
-            if total_cells[0] == 0:
+            if n_count[0] == 0:
                 prob_death = 0
             else:
-                prob_death = (1 / total_cells[0]) * (self.mu()) * sqrt(total_cells[0]) * total_cells[1]
+                prob_death = (1 / n_count[0]) * (self.mu()) * sqrt(n_count[0]) * n_count[1]
                 prob_death = self.d + prob_death
         elif self.type == 2:
-            prob_death = self.delta * self.model.g * sqrt(total_cells[0])
+            prob_death = self.delta * self.model.g * sqrt(n_count[0])
             prob_death = self.d + prob_death
 
-        if prob_death <= random.uniform(0, 1):
+        if self.type == 0 or self.type == 1:
+            self.model.average_deathrate[0][0] += prob_death
+            self.model.average_deathrate[0][1] += 1
+        elif self.type == 2:
+            self.model.average_deathrate[1][0] += prob_death
+            self.model.average_deathrate[1][1] += 1
+
+        if random.uniform(0, 1) <= prob_death:
             self.model.new_cell2delete(self)
             return True
         return False
@@ -168,11 +209,16 @@ class CellAgent(Agent):
         # if self.is_crowed()
 
         give_birth = self.give_birth()
+        #if not give_birth:
+        #    print("cell {} doesnt give birth".format(self.unique_id))
         if give_birth:
             offspring_pos = self.daughter_cell_pos()
             if self.model.space.out_of_bounds(offspring_pos):
                 print(offspring_pos, "out of bounds")
                 offspring_pos = self.model.space.torus_adj(offspring_pos)
+
+            # print("Cell {} at pos {} gives birth to new cell at position {} (neighbors: {})".format(
+            #            self.unique_id, self.pos, offspring_pos, [n.pos for n in self.neighbours]))
 
             offspring = CellAgent(len(self.model.schedule.agents), self.model, self.type)
             offspring.set_gamma(self.gamma)

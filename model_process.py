@@ -89,6 +89,8 @@ class ProcessModel(Model):
 
         self.counter = 0
         self.density = []
+        self.average_birthrate = [[0, 0], [0, 0]]
+        self.average_deathrate = [[0, 0], [0, 0]]
 
     @property
     def g(self):
@@ -136,21 +138,30 @@ class ProcessModel(Model):
 
         # TODO: Compute model density once and give as parameter to the step function
         self.density = self.get_density()
-
+        self.average_birthrate = [[0, 0], [0, 0]]
         self.schedule.step()
         self.counter = 0
 
+        print("Average Birthrate: ", self.average_birthrate[0][0] / self.average_birthrate[0][1])
+        print("Average Deathrate: ", self.average_deathrate[0][0] / self.average_deathrate[0][1])
+
     def add_new_cells(self):
+
+        added_types = [0, 0, 0]
         for c, p in self.cells2add:
+            added_types[c.type] += 1
             self.schedule.add(c)
             self.space.place_agent(c, p)
             self.add_cell_pos(p, c.type)
             self.cells2add.remove((c, p))
 
+        return added_types
+
     def delete_dead_cells(self):
 
+        dead_types = [0, 0, 0]
         for c in self.cells2delete:
-
+            dead_types[c.type] += 1
             removed_x, removed_y = False, False
             if c.type == 0:
                 if self.pos_selfish_cells[0].__contains__(c.pos[0]):
@@ -176,3 +187,5 @@ class ProcessModel(Model):
 
             self.schedule.remove(c)
             self.cells2delete.remove(c)
+
+        return dead_types
