@@ -30,6 +30,7 @@ class ProcessModel(Model):
         self.death_ratio = death_ratio
         self.death_period_limit = death_period_limit
         self.birth_rates = birth_rates
+        self.R = min(width, height)/2.0
         self.k, self.l, self.a = k, l, a
 
         self.cells2add = []
@@ -76,10 +77,11 @@ class ProcessModel(Model):
                 continue
 
             self.schedule.add(a)
-            center_width_min = self.space.center[0] - (0.2 * self.space.width)
-            center_width_max = self.space.center[0] + (0.2 * self.space.width)
-            center_height_min = self.space.center[1] - (0.2 * self.space.height)
-            center_height_max = self.space.center[1] + (0.2 * self.space.height)
+            centered = 0.2
+            center_width_min = self.space.center[0] - (0.5 * self.space.width)
+            center_width_max = self.space.center[0] + (0.5 * self.space.width)
+            center_height_min = self.space.center[1] - (0.5 * self.space.height)
+            center_height_max = self.space.center[1] + (0.5 * self.space.height)
 
             # Add the agent to a random pos
             x = random.uniform(center_width_min, center_width_max)
@@ -136,9 +138,10 @@ class ProcessModel(Model):
 
     def step(self):
 
-        # TODO: Compute model density once and give as parameter to the step function
         self.density = self.get_density()
         self.average_birthrate = [[0, 0], [0, 0]]
+        self.average_deathrate = [[0, 0], [0, 0]]
+
         self.schedule.step()
         self.counter = 0
 

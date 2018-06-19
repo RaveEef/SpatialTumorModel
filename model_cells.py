@@ -66,10 +66,12 @@ class CellAgent(Agent):
 
         self.neighbours = self.model.space.get_neighbors(self.pos, self.model.density_radius[self.type], False)
 
-    def is_crowed(self, neighbours):
+    def is_crowded(self, neighbours):
 
         if len(neighbours) >= (pi * self.model.density_radius[self.type] *
                                self.model.density_radius[self.type] * self.model.max_cells_per_unit):
+
+            print("TO CROWDED")
             return True
         return False
 
@@ -84,44 +86,33 @@ class CellAgent(Agent):
             elif n.type == 2:
                 n_count[1] += 1
 
-        num_cancer = self.cell_density_model[0] + self.cell_density_model[1]
-        num_tkiller = self.cell_density_model[2]
-
-        prob_birth = 0
         birth_rate = self.model.birth_rates[self.type]
+        prob_birth = 0
 
         if self.type == 0 or self.type == 1:
-            prob_birth = 1 - (sqrt(num_cancer) / self.model.k)
+            K = self.model.k * (
+                    (self.model.frequency_radius[self.type] * self.model.frequency_radius[self.type]) /
+                    (self.model.R * self.model.R))
+
+            # print("k:", self.model.k, "K: ", K)
+            prob_birth = 1 - (sqrt(n_count[0]) / K)
             prob_birth = birth_rate * prob_birth
         elif self.type == 2:
-            prob_birth = self.model.l + (self.model.a * (sqrt(num_cancer)))
-            prob_birth = 1 - (num_tkiller / prob_birth)
+            prob_birth = self.model.l + (self.model.a * (sqrt(n_count[0])))
+            prob_birth = 1 - (n_count[1] / prob_birth)
             prob_birth = birth_rate * prob_birth
         else:
             print("WHUT")
 
-        # print("Probability of giving birth: ", prob_birth)
-        prob_birth2 = 0
-
         if self.type == 0 or self.type == 1:
-            prob_birth2 = 1 - (sqrt(n_count[0]) / self.model.k)
-            prob_birth2 = birth_rate * prob_birth2
-        elif self.type == 2:
-            prob_birth2 = self.model.l + (self.model.a * (sqrt(n_count[0])))
-            prob_birth2 = 1 - (n_count[1] / prob_birth2)
-            prob_birth2 = birth_rate * prob_birth2
-        else:
-            print("WHUT")
-
-        if self.type == 0 or self.type == 1:
-            self.model.average_birthrate[0][0] += prob_birth2
+            self.model.average_birthrate[0][0] += prob_birth
             self.model.average_birthrate[0][1] += 1
         elif self.type == 2:
-            self.model.average_birthrate[1][0] += prob_birth2
+            self.model.average_birthrate[1][0] += prob_birth
             self.model.average_birthrate[1][1] += 1
 
         # print("Prob2: ", prob_birth2)
-        if random.uniform(0, 1) <= prob_birth2:
+        if random.uniform(0, 1) <= prob_birth:
             return True
         return False
 

@@ -6,10 +6,13 @@ import glob
 import re
 import os
 
+use_egtplot = False
+
 
 # PARAMETERS
 # Significance level for difference in growthrates for selfish, cooperative, and tkiller cell respectively
 SIGNIFICANCE_EQ_GROWTH_RATE = [0.05, 0.05, 0.05]
+
 # for file in os.listdir('figures\\'):
 #   os.remove('figures\\'+ file)
 
@@ -24,20 +27,20 @@ def numerical_sort(value):
 
 def scatter_plot(i, model, initial_densities):
 
-    selfish = plt.scatter(model.pos_selfish_cells[0], model.pos_selfish_cells[1], c='r', s=2, label='Selfish Cells')
-    cooperative = plt.scatter(model.pos_cooperative_cells[0], model.pos_cooperative_cells[1], c='b', s=2,
+    selfish = plt.scatter(model.pos_selfish_cells[0], model.pos_selfish_cells[1], c='r', s=4, label='Selfish Cells')
+    cooperative = plt.scatter(model.pos_cooperative_cells[0], model.pos_cooperative_cells[1], c='b', s=4,
                               label='Cooperative Cells')
-    tkiller = plt.scatter(model.pos_tkiller_cells[0], model.pos_tkiller_cells[1], c='g', s=2, label="T-Killer Cells")
+    tkiller = plt.scatter(model.pos_tkiller_cells[0], model.pos_tkiller_cells[1], c='g', s=4, label="T-Killer Cells")
     plt.xlim(0, model.space.width)
     plt.ylim(0, model.space.height)
     plt.title("Iteration {}, Initial Density: [{}, {}, {}]".format(i, initial_densities[0],
                                                                    initial_densities[1], initial_densities[2]))
     if initial_densities[0] == 0:
-        plt.legend(handles=[cooperative, tkiller])
+        plt.legend(handles=[cooperative, tkiller], loc=7)
     elif initial_densities[1] == 0:
-        plt.legend(handles=[selfish, tkiller])
+        plt.legend(handles=[selfish, tkiller], loc=7)
     else:
-        plt.legend(handles=[selfish, cooperative, tkiller])
+        plt.legend(handles=[selfish, cooperative, tkiller], loc=7)
 
     directory = "figures_{}_{}_{}".format(initial_densities[0], initial_densities[1], initial_densities[2])
     if not os.path.exists(directory):
@@ -71,7 +74,10 @@ def make_gif(initial_density):
                     gif, fps=(len(files)/10))
 
     if os.path.isfile("process.gif"):
-        os.remove("process.gif")
+        try:
+            os.remove("process.gif")
+        except:
+            pass
 
 
 def run(initial_density, n_iteration=100, plot_frequency=1):
@@ -165,29 +171,30 @@ def run(initial_density, n_iteration=100, plot_frequency=1):
 
         before_growth_rates = after_growth_rates
 
-
-
     make_gif(initial_density)
 
-from egtplot import plot_static
+
+initial_densities = [[100, 100, 100]]
+
+for id in initial_densities:
+    run(id, n_iteration=100, plot_frequency=1)
 
 
-initial_densities = [[50, 50, 50]]
+if use_egtplot:
+    from egtplot import plot_static
 
-def get_payoff(alpha, beta, gamma, rho):
-    return [[0, alpha, 0],
-            [1 + alpha - beta, 1 - 2 * beta, 1 - beta + rho],
-            [1 - gamma, 1 - gamma, 1 - gamma]]
+    def get_payoff(alpha, beta, gamma, rho):
+        return [[0, alpha, 0],
+                [1 + alpha - beta, 1 - 2 * beta, 1 - beta + rho],
+                [1 - gamma, 1 - gamma, 1 - gamma]]
 
 
-# for id in initial_densities:
-#    run(id, n_iteration=100, plot_frequency=0)
-parameter_values = [[1], [1], [1], [1]]
-labels = ['S', 'D', 'I']
-# simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels)
-# payoff_entries = [[0], [-1], [3], [-1], [0], [1], [3], [1], [0]]
-simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels,
-                        paths=True, generations=10, steps=2000, ic_type='random', path_color='viridis')
-plt.show(simplex)
+    parameter_values = [[1], [1], [1], [1]]
+    labels = ['S', 'D', 'I']
+    # simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels)
+    # payoff_entries = [[0], [-1], [3], [-1], [0], [1], [3], [1], [0]]
+    simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels,
+                            paths=True, generations=10, steps=2000, ic_type='random', path_color='viridis')
+    plt.show(simplex)
 
 
