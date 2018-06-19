@@ -180,14 +180,13 @@ def get_payoff(alpha, beta, gamma, rho):
             [1 - gamma, 1 - gamma, 1 - gamma]]
 
 
-# for id in initial_densities:
-#    run(id, n_iteration=100, plot_frequency=0)
-parameter_values = [[1], [1], [1], [1]]
-labels = ['S', 'D', 'I']
-# simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels)
-# payoff_entries = [[0], [-1], [3], [-1], [0], [1], [3], [1], [0]]
-simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels,
-                        paths=True, generations=10, steps=2000, ic_type='random', path_color='viridis')
-plt.show(simplex)
-
-
+if __name__ == "__main__":
+    # for id in initial_densities:
+    #    run(id, n_iteration=100, plot_frequency=0)
+    parameter_values = [[1], [1], [1], [1]]
+    labels = ['S', 'D', 'I']
+    # simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels)
+    # payoff_entries = [[0], [-1], [3], [-1], [0], [1], [3], [1], [0]]
+    simplex = plot_static(parameter_values, custom_func=get_payoff, vert_labels=labels,
+                            paths=True, generations=10, steps=2000, ic_type='random', path_color='viridis')
+    plt.show(simplex)
