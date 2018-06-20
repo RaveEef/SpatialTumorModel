@@ -1,0 +1,5 @@
+*.gif
+.idea/
+__pycache__/
+figures_0_20_20/
+figures_100_100_100/
